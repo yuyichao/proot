@@ -571,14 +571,18 @@ int translate_syscall_enter(Tracee *tracee)
 		status = translate_path2(tracee, newdirfd, newpath, SYSARG_3, SYMLINK);
 		break;
 
-	case PR_prctl:
+	case PR_prctl: {
+                word_t option = peek_reg(tracee, CURRENT, SYSARG_1);
 		/* Prevent tracees from setting dumpable flag.
 		 * (Otherwise it could break tracee memory access)  */
-		if (peek_reg(tracee, CURRENT, SYSARG_1) == PR_SET_DUMPABLE) {
+		if (option == PR_SET_DUMPABLE) {
 			set_sysnum(tracee, PR_void);
 			status = 0;
 		}
+                else if (option == PR_SET_SECCOMP) {
+                }
 		break;
+        }
 	}
 
 end:

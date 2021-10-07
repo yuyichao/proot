@@ -1,0 +1,3 @@
+[submodule "src/ubpf"]
+	path = src/ubpf
+	url = https://github.com/iovisor/ubpf.git

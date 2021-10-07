@@ -20,7 +20,7 @@ PYTHON_MAJOR_VERSION = $(shell ${PYTHON} -c "import sys; print(sys.version_info.
 PYTHON_EMBED = $(shell ${PYTHON} -c "import sys; print('--embed' if sys.hexversion > 0x03080000 else '')" 2>/dev/null)
 HAS_PYTHON_CONFIG := $(shell ${PYTHON}-config --ldflags ${PYTHON_EMBED} 2>/dev/null)
 
-CPPFLAGS += -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -I. -I$(VPATH)
+CPPFLAGS += -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -I. -I$(VPATH) -Iubpf/vm/inc
 CFLAGS   += -g -Wall -Wextra -O2
 CFLAGS   += $(shell pkg-config --cflags talloc libarchive)
 LDFLAGS  += -Wl,-z,noexecstack
@@ -176,10 +176,10 @@ OBJIFY = $($(quiet)GEN)									\
 				grep architecture | cut -f 1 -d , | awk '{print $$2}'`	\
 		$< $@
 
-proot: $(OBJECTS)
+proot: $(OBJECTS) ubpf/vm/libubpf.a
 	$(LINK)
 
-care: $(OBJECTS) $(CARE_OBJECTS)
+care: $(OBJECTS) ubpf/vm/libubpf.a $(CARE_OBJECTS)
 	$(LINK) $(CARE_LDFLAGS)
 
 # Special case to compute which files depend on the auto-generated
@@ -275,6 +275,15 @@ $(eval $(build_loader))
 ifdef HAS_LOADER_32BIT
 $(eval $(call build_loader,-m32))
 endif
+
+######################################################################
+# UBPF
+.PHONY: build-ubpf
+build-ubpf:
+	$(Q)$(MAKE) -C ubpf/vm
+
+ubpf/vm/inc/ubpf.h ubpf/vm/libubpf.a: build-ubpf
+	$(Q)true
 
 ######################################################################
 # Dependencies
